@@ -3,15 +3,14 @@ package com.nakomans.lessr.service.parsers;
 import com.nakomans.lessr.dao.GamesDatabase;
 import com.nakomans.lessr.dto.GameInfoDto;
 import com.nakomans.lessr.service.gamesinformation.RetrieveInformationFromSteam;
-
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.text.Normalizer;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+
 import org.jsoup.nodes.Element;
 import java.util.regex.Pattern;
 import org.jsoup.Jsoup;
@@ -38,6 +37,9 @@ public class SteamParser {
         Boolean inPromotion = isGameInPromotion(gamePage);
         String originalGamePrice = showGamePrice(gamePage);
         String promotionPrice = showGamePromotionPrice(gamePage);
+        LocalDate date = LocalDate.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        String dateFormatted = date.format(formatter);
 
         return new GameInfoDto(
             gameName,
@@ -49,25 +51,10 @@ public class SteamParser {
             metacriticScore,
             inPromotion,
             originalGamePrice,
-            promotionPrice
+            promotionPrice,
+            dateFormatted
         );
     }
-
-    public String getGameAppId(String rawGameName) {
-        try (Connection conn = dataBase.connectToDatabase();
-            PreparedStatement pstmt = conn.prepareStatement("SELECT appid FROM games where name = ?")) {
-                
-                pstmt.setString(1, rawGameName);
-
-                try (ResultSet rs = pstmt.executeQuery()) {
-                    if(rs.next()) {
-                        Integer result = rs.getInt("appid");
-                        return result.toString();
-                    }
-                }
-            } catch (SQLException e) { e.printStackTrace(); }
-            return null;
-        }
 
     public String gameNameFormatterForSteam(String rawGameName) {
         String gameNameWithAccents = Normalizer.normalize(rawGameName, Normalizer.Form.NFD);
@@ -87,27 +74,38 @@ public class SteamParser {
         cookiesForSteam.put("steamCountry", "BR%7C6701a4f67d7b861f33919b5a1c1df1ba");
 
         String gameName = gameNameFormatterForSteam(rawGameName);
-        String gameAppId = getGameAppId(rawGameName);
-        return Jsoup.connect("https://store.steampowered.com/app/" + gameAppId + "/" + gameName + "?l=portuguese").cookies(cookiesForSteam).userAgent(userAgent).get();
+        String gameAppId = dataBase.getGameAppId(rawGameName).orElseThrow(() -> new IllegalArgumentException("Erro: O jogo '" + rawGameName + "' não existe no banco de dados."));
+
+        return Jsoup.connect("https://store.steampowered.com/app/" + gameAppId + "/" + gameName + "?l=portuguese")
+        .cookies(cookiesForSteam)
+        .userAgent(userAgent)
+        .timeout(10000)
+        .get();
     }
+
     
     public String showGamePrice(Document gamePage) {
-        Element gamePrice = gamePage.selectFirst("div.game_purchase_price.price");
-        if (isGameInPromotion(gamePage)) {
-            return gamePage.selectFirst("div.discount_prices div.discount_original_price").text();
-        }
-        return gamePrice.text();
+    Optional<Element> originalPriceInDiscount = retrieveInformation.safeSearch(gamePage,
+        "div.game_area_purchase_game:not(.game_area_purchase_game_dropdown_subscription) div.discount_original_price");
+    if (originalPriceInDiscount.isPresent()) {
+        return originalPriceInDiscount.get().text();
     }
+    Optional<Element> normalPrice = retrieveInformation.safeSearch(gamePage,
+        "div.game_area_purchase_game:not(.game_area_purchase_game_dropdown_subscription) div.game_purchase_price.price");
+    return normalPrice
+        .map(Element::text)
+        .orElse("Preço não encontrado");
+}
 
     public String showGamePromotionPrice(Document gamePage) {
-        if (isGameInPromotion(gamePage)) {
-            return gamePage.selectFirst("div.discount_prices div.discount_final_price").text();
-        }
-        return "Não há promoções para este jogo no momento na Steam";
-    }
+    String cssSelector = "div.game_area_purchase_game:not(.game_area_purchase_game_dropdown_subscription) div.discount_final_price";
+    Optional<Element> promoPrice = retrieveInformation.safeSearch(gamePage, cssSelector);
+    return promoPrice.map(Element::text).orElse("Não há promoções para este jogo no momento na Steam");
+}
 
     public Boolean isGameInPromotion(Document gamePage) {
-        return gamePage.selectFirst("div.game_area_purchase_game div.discount_prices") != null;
-    }
-
+    String cssSelector = "div.game_area_purchase_game:not(.game_area_purchase_game_dropdown_subscription) div.discount_original_price";
+    Optional<Element> element = retrieveInformation.safeSearch(gamePage, cssSelector);
+    return element.isPresent();
+}
 }

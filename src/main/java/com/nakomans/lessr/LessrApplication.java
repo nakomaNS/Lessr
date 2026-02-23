@@ -25,7 +25,7 @@ public class LessrApplication {
     @Bean
 public CommandLineRunner teste(SteamParser steamParser) {
     return args -> {
-        String gameNameTest = "Elden Ring";
+        String gameNameTest = "dark souls III";
 
         try {
             GameInfoDto info = steamParser.getGameInformation(gameNameTest);
@@ -44,6 +44,7 @@ public CommandLineRunner teste(SteamParser steamParser) {
                 System.out.println("--------------------------------------------------");
                 System.out.println("Preco Original:    " + info.originalGamePrice());
                 System.out.println("Em Promocao:       " + (info.inPromotion() ? "Sim" : "Nao"));
+                System.out.println("Data do registro:  " + info.date());
                 
                 if (info.inPromotion()) {
                     System.out.println("Preco Promocional: " + info.promotionPrice());

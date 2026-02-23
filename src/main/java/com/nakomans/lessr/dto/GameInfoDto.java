@@ -10,5 +10,6 @@ public record GameInfoDto (
     String metacriticScore,
     Boolean inPromotion,
     String originalGamePrice,
-    String promotionPrice
+    String promotionPrice,
+    String date 
 ) {}
