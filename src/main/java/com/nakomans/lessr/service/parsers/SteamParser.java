@@ -18,12 +18,18 @@ import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Service;
 
 @Service
-public class SteamParser {
+public class SteamParser implements GameParser {
 
     private final GamesDatabase dataBase;
     private final RetrieveInformationFromSteam retrieveInformation;
     public SteamParser(GamesDatabase dataBase, RetrieveInformationFromSteam retrieveInformation) { this.dataBase = dataBase; this.retrieveInformation = retrieveInformation;}
 
+    @Override
+    public String getStoreName() {
+        return "Steam";
+    }
+
+    @Override
     public GameInfoDto getGameInformation(String rawGameName) throws IOException {
         Document gamePage = loadSteamPage(rawGameName);
         
@@ -90,6 +96,7 @@ public class SteamParser {
     if (originalPriceInDiscount.isPresent()) {
         return originalPriceInDiscount.get().text();
     }
+    
     Optional<Element> normalPrice = retrieveInformation.safeSearch(gamePage,
         "div.game_area_purchase_game:not(.game_area_purchase_game_dropdown_subscription) div.game_purchase_price.price");
     return normalPrice

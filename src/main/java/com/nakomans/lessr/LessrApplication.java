@@ -9,7 +9,7 @@ import org.springframework.boot.autoconfigure.data.jdbc.JdbcRepositoriesAutoConf
 import org.springframework.context.annotation.Bean;
 
 import com.nakomans.lessr.dto.GameInfoDto;
-import com.nakomans.lessr.service.parsers.SteamParser;
+import com.nakomans.lessr.service.parsers.NuuvemParser;
 
 @SpringBootApplication(exclude = {
     DataSourceAutoConfiguration.class, 
@@ -23,39 +23,37 @@ public class LessrApplication {
     }
 
     @Bean
-public CommandLineRunner teste(SteamParser steamParser) {
-    return args -> {
-        String gameNameTest = "dark souls III";
+    public CommandLineRunner teste(NuuvemParser nuuvemParser) {
+        return args -> {
+            String gameNameTest = "the first berserker khazan";
 
-        try {
-            GameInfoDto info = steamParser.getGameInformation(gameNameTest);
+            try {
+                GameInfoDto info = nuuvemParser.getGameInformation(gameNameTest);
 
-            if (info != null) {
-                System.out.println("======== TESTE RÁPIDO [TEMPORÁRIO ATÉ QUE TESTES UNITÁRIOS SEJAM IMPLEMENTADOS] ========");
-                System.out.println("DADOS DO JOGO ENCONTRADOS:");
-                System.out.println("--------------------------------------------------");
-                System.out.println("Nome:              " + info.gameName());
-                System.out.println("Desenvolvedor:     " + info.developer());
-                System.out.println("Metacritic:        " + info.metacriticScore());
-                System.out.println("Avaliacoes:        " + info.reviews());
-                System.out.println("Categorias:        " + info.categories());
-                System.out.println("URL do Banner:     " + info.banner());
-                System.out.println("Descricao:         " + info.description());
-                System.out.println("--------------------------------------------------");
-                System.out.println("Preco Original:    " + info.originalGamePrice());
-                System.out.println("Em Promocao:       " + (info.inPromotion() ? "Sim" : "Nao"));
-                System.out.println("Data do registro:  " + info.date());
-                
-                if (info.inPromotion()) {
-                    System.out.println("Preco Promocional: " + info.promotionPrice());
+                if (info != null) {
+                    System.out.println("======== TESTE RÁPIDO [TEMPORÁRIO ATÉ QUE TESTES UNITÁRIOS SEJAM IMPLEMENTADOS] ========");
+                    System.out.println("DADOS DO JOGO ENCONTRADOS:");
+                    System.out.println("--------------------------------------------------");
+                    System.out.println("Nome:              " + info.gameName());
+                    System.out.println("Desenvolvedor:     " + info.developer());
+                    System.out.println("Metacritic:        " + info.metacriticScore());
+                    System.out.println("Avaliacoes:        " + info.reviews());
+                    System.out.println("Categorias:        " + info.categories());
+                    System.out.println("URL do Banner:     " + info.banner());
+                    System.out.println("--------------------------------------------------");
+                    System.out.println("Preco Original:    " + info.originalGamePrice());
+                    System.out.println("Em Promocao:       " + (info.inPromotion() ? "Sim" : "Nao"));
+                    if (info.inPromotion()) {
+                        System.out.println("Preco Promocional: " + info.promotionPrice());
+                    }
+                    System.out.println("Data do registro:  " + info.date());
                 }
+
+            } catch (Exception e) {
+                System.err.println("ERRO DURANTE O TESTE: " + e.getMessage());
+                e.printStackTrace();
             }
-
-        } catch (Exception e) {
-            System.err.println("ERRO: " + e.getMessage());
-        }
-
-        System.out.println("--------------------------------------------------");
-    };
-}
+            System.out.println("--------------------------------------------------");
+        };
+    }
 }
