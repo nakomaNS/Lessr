@@ -7,9 +7,8 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.jdbc.JdbcRepositoriesAutoConfiguration;
 import org.springframework.context.annotation.Bean;
-
 import com.nakomans.lessr.dto.GameInfoDto;
-import com.nakomans.lessr.service.parsers.NuuvemParser;
+import com.nakomans.lessr.service.parsers.EnebaParser;
 
 @SpringBootApplication(exclude = {
     DataSourceAutoConfiguration.class, 
@@ -23,15 +22,14 @@ public class LessrApplication {
     }
 
     @Bean
-    public CommandLineRunner teste(NuuvemParser nuuvemParser) {
+    public CommandLineRunner teste(EnebaParser enebaParser) {
         return args -> {
             String gameNameTest = "the first berserker khazan";
-
             try {
-                GameInfoDto info = nuuvemParser.getGameInformation(gameNameTest);
+                GameInfoDto info = enebaParser.getGameInformation(gameNameTest);
 
                 if (info != null) {
-                    System.out.println("======== TESTE RÁPIDO [TEMPORÁRIO ATÉ QUE TESTES UNITÁRIOS SEJAM IMPLEMENTADOS] ========");
+                    System.out.println("======== TESTE RÁPIDO ========");
                     System.out.println("DADOS DO JOGO ENCONTRADOS:");
                     System.out.println("--------------------------------------------------");
                     System.out.println("Nome:              " + info.gameName());
@@ -48,12 +46,9 @@ public class LessrApplication {
                     }
                     System.out.println("Data do registro:  " + info.date());
                 }
-
             } catch (Exception e) {
-                System.err.println("ERRO DURANTE O TESTE: " + e.getMessage());
                 e.printStackTrace();
             }
-            System.out.println("--------------------------------------------------");
         };
     }
 }
