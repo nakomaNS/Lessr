@@ -24,13 +24,15 @@ public class LessrApplication {
     @Bean
     public CommandLineRunner teste(EnebaParser enebaParser) {
         return args -> {
-            String gameNameTest = "the first berserker khazan";
+            String gameNameTest = "lies of p";
             try {
+                System.out.println("Iniciando busca na Eneba para: " + gameNameTest + "...");
+                
                 GameInfoDto info = enebaParser.getGameInformation(gameNameTest);
 
                 if (info != null) {
-                    System.out.println("======== TESTE RÁPIDO ========");
-                    System.out.println("DADOS DO JOGO ENCONTRADOS:");
+                    System.out.println("\n======== TESTE RÁPIDO (ENEBA) ========");
+                    System.out.println("DADOS DO JOGO:");
                     System.out.println("--------------------------------------------------");
                     System.out.println("Nome:              " + info.gameName());
                     System.out.println("Desenvolvedor:     " + info.developer());
@@ -39,14 +41,21 @@ public class LessrApplication {
                     System.out.println("Categorias:        " + info.categories());
                     System.out.println("URL do Banner:     " + info.banner());
                     System.out.println("--------------------------------------------------");
-                    System.out.println("Preco Original:    " + info.originalGamePrice());
-                    System.out.println("Em Promocao:       " + (info.inPromotion() ? "Sim" : "Nao"));
+                    System.out.println("PREÇOS EXTRAÍDOS:");
+                    System.out.println("Preço Base:        " + info.originalGamePrice());
+                    System.out.println("Em Promoção:       " + (info.inPromotion() ? "SIM" : "NÃO"));
+                    
                     if (info.inPromotion()) {
-                        System.out.println("Preco Promocional: " + info.promotionPrice());
+                        System.out.println("Preço c/ Desconto: " + info.promotionPrice());
                     }
-                    System.out.println("Data do registro:  " + info.date());
+                    
+                    System.out.println("Data da Consulta:  " + info.date());
+                    System.out.println("======================================\n");
+                } else {
+                    System.out.println("Nenhum dado encontrado para o jogo especificado.");
                 }
             } catch (Exception e) {
+                System.err.println("ERRO DURANTE O TESTE: " + e.getMessage());
                 e.printStackTrace();
             }
         };
