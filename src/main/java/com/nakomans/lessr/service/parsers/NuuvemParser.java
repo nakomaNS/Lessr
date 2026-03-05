@@ -11,11 +11,11 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Service;
 
-import com.nakomans.lessr.dto.GameInfoDto;
+import com.nakomans.lessr.dto.SteamDto;
 import com.nakomans.lessr.service.gamesinformation.RetrieveInformationFromSteam;
 
 @Service
-public class NuuvemParser implements GameParser {
+public class NuuvemParser {
 
     private final RetrieveInformationFromSteam steamService;
     private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
@@ -24,15 +24,12 @@ public class NuuvemParser implements GameParser {
         this.steamService = steamService;
     }
 
-    @Override
     public String getStoreName() {
         return "Nuuvem";
     }
 
-    @Override
-    public GameInfoDto getGameInformation(String rawGameName) {
-        Document nuuvemDoc = null;
-        Document steamDoc = null;
+    public SteamDto getGameInformation(String rawGameName, Document steamDoc) {
+        Document nuuvemDoc;
 
         try {
             nuuvemDoc = loadNuuvemPage(rawGameName);
@@ -40,21 +37,17 @@ public class NuuvemParser implements GameParser {
             nuuvemDoc = Jsoup.parse("<html></html>");
         }
 
-        try {
-            steamDoc = loadSteamPage(rawGameName);
-        } catch (Exception e) {
-            steamDoc = Jsoup.parse("<html></html>");
-        }
-
         boolean inPromotion = isGameInPromotion(nuuvemDoc);
+        String originalPrice = showGamePrice(nuuvemDoc);
         String promotionPrice = showGamePromotionPrice(nuuvemDoc);
-        String originalPrice = inPromotion ? showGamePrice(nuuvemDoc) : promotionPrice;
+        
         String gameName = Optional.ofNullable(steamService.gameNameDisplay(steamDoc))
                 .orElse("Nome indisponível")
                 .replace("?", "").replace("™", "").replace("®", "").trim();
+        
         String dateFormatted = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
 
-        return new GameInfoDto(
+        return new SteamDto(
                 gameName,
                 steamService.gameDescription(steamDoc),
                 steamService.gameBanner(steamDoc),
@@ -83,32 +76,14 @@ public class NuuvemParser implements GameParser {
                 .get();
     }
 
-    private Document loadSteamPage(String rawGameName) throws IOException {
-        String searchUrl = "https://store.steampowered.com/search/?term=" + rawGameName;
-        Document searchPage = Jsoup.connect(searchUrl).userAgent(USER_AGENT).timeout(10000).get();
-
-        Element firstResult = searchPage.selectFirst("a.search_result_row");
-        if (firstResult != null) {
-            String gameUrl = firstResult.attr("href");
-            return Jsoup.connect(gameUrl)
-                    .userAgent(USER_AGENT)
-                    .cookie("lastagecheckage", "1-0-1900")
-                    .cookie("birthtime", "283993201")
-                    .header("Accept-Language", "pt-BR,pt;q=0.9")
-                    .timeout(10000)
-                    .get();
-        }
-        return searchPage;
-    }
-
     public Boolean isGameInPromotion(Document doc) {
         if (doc == null) return false;
-        return doc.selectFirst(".product-price--discount") != null;
+        return doc.selectFirst(".product-buy .product-price--discount") != null;
     }
 
     public String showGamePrice(Document doc) {
         if (doc == null) return "N/A";
-        Element priceOld = doc.selectFirst(".product-price--old");
+        Element priceOld = doc.selectFirst(".product-buy .product-price--old");
         if (priceOld != null) {
             return priceOld.text().trim();
         }
@@ -117,12 +92,12 @@ public class NuuvemParser implements GameParser {
 
     public String showGamePromotionPrice(Document doc) {
         if (doc == null) return "Preço não encontrado";
-        Element priceVal = doc.selectFirst(".product-price--val");
+        Element priceVal = doc.selectFirst(".product-buy .product-price--val");
         if (priceVal != null) {
             Element cleanPrice = priceVal.clone();
             cleanPrice.select(".product-price--old").remove();
             cleanPrice.select(".product-price--discount").remove();
-            return cleanPrice.text().trim();
+            return cleanPrice.text().replace(" ,", ",").trim();
         }
         return "Preço não encontrado";
     }

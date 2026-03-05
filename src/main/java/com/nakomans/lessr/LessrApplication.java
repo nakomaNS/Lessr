@@ -1,5 +1,6 @@
 package com.nakomans.lessr;
 
+import org.jsoup.nodes.Document;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -7,8 +8,9 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.jdbc.JdbcRepositoriesAutoConfiguration;
 import org.springframework.context.annotation.Bean;
-import com.nakomans.lessr.dto.GameInfoDto;
+import com.nakomans.lessr.dto.EnebaDto;
 import com.nakomans.lessr.service.parsers.EnebaParser;
+import com.nakomans.lessr.service.parsers.SteamParser;
 
 @SpringBootApplication(exclude = {
     DataSourceAutoConfiguration.class, 
@@ -22,13 +24,15 @@ public class LessrApplication {
     }
 
     @Bean
-    public CommandLineRunner teste(EnebaParser enebaParser) {
+    public CommandLineRunner teste(EnebaParser enebaParser, SteamParser steamParser) {
         return args -> {
             String gameNameTest = "lies of p";
             try {
-                System.out.println("Iniciando busca na Eneba para: " + gameNameTest + "...");
+                System.out.println("Iniciando busca na Steam e Eneba para: " + gameNameTest + "...");
                 
-                GameInfoDto info = enebaParser.getGameInformation(gameNameTest);
+                Document sharedSteamDoc = steamParser.loadSteamPage(gameNameTest);
+                
+                EnebaDto info = enebaParser.getGameInformation(gameNameTest, sharedSteamDoc);
 
                 if (info != null) {
                     System.out.println("\n======== TESTE RÁPIDO (ENEBA) ========");

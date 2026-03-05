@@ -7,7 +7,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.regex.Pattern;
 import java.util.Optional;
 import com.google.gson.*;
-import com.nakomans.lessr.dto.GameInfoDto;
+import com.nakomans.lessr.dto.EnebaDto;
+import com.nakomans.lessr.dto.SteamDto;
 import com.nakomans.lessr.service.gamesinformation.RetrieveInformationFromSteam;
 
 import org.jsoup.Jsoup;
@@ -19,7 +20,7 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.springframework.stereotype.Service;
 
 @Service
-public class EnebaParser implements GameParser {
+public class EnebaParser {
 
     private final RetrieveInformationFromSteam steamInfo;
     private final WebDriver driver;
@@ -34,19 +35,15 @@ public class EnebaParser implements GameParser {
         this.driver = new ChromeDriver(options);
     }
 
-    @Override
     public String getStoreName() {
         return "Eneba";
     }
 
-    @Override
-    public GameInfoDto getGameInformation(String rawGameName) throws IOException {
+    public EnebaDto getGameInformation(String rawGameName, Document steamDoc) throws IOException {
         try {
-            Document steamDoc = steamInfo.loadSteamPage(driver, rawGameName);
-
             Document enebaDoc = loadEnebaPage(rawGameName);
 
-            return new GameInfoDto(
+            return new EnebaDto(
                 steamInfo.gameNameDisplay(steamDoc),
                 steamInfo.gameDescription(steamDoc),
                 steamInfo.gameBanner(steamDoc),
@@ -54,13 +51,13 @@ public class EnebaParser implements GameParser {
                 steamInfo.showReviews(steamDoc),
                 steamInfo.showDeveloper(steamDoc),
                 steamInfo.showMetaCriticScore(steamDoc),
-                isGameInPromotion(enebaDoc),
-                showGamePrice(enebaDoc),
+                isGameInPromotion(enebaDoc), 
+                showGamePrice(enebaDoc),      
                 showGamePromotionPrice(enebaDoc),
                 LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
             );
         } catch (Exception e) {
-            throw new IOException("Erro na orquestração: " + e.getMessage(), e);
+            throw new IOException("Erro ao processar Eneba: " + e.getMessage());
         }
     }
 

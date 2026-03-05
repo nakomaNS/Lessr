@@ -1,6 +1,6 @@
 package com.nakomans.lessr.dto;
 
-public record GameInfoDto (
+public record SteamDto (
     String gameName,
     String description,
     String banner,

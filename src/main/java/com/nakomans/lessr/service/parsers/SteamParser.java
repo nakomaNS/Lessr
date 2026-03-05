@@ -1,7 +1,7 @@
 package com.nakomans.lessr.service.parsers;
 
 import com.nakomans.lessr.dao.GamesDatabase;
-import com.nakomans.lessr.dto.GameInfoDto;
+import com.nakomans.lessr.dto.SteamDto;
 import com.nakomans.lessr.service.gamesinformation.RetrieveInformationFromSteam;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
-public class SteamParser implements GameParser {
+public class SteamParser {
 
     private final GamesDatabase dataBase;
     private final RetrieveInformationFromSteam retrieveInformation;
@@ -25,16 +25,12 @@ public class SteamParser implements GameParser {
         this.retrieveInformation = retrieveInformation;
     }
 
-    @Override
     public String getStoreName() {
         return "Steam";
     }
 
-    @Override
-    public GameInfoDto getGameInformation(String rawGameName) throws IOException {
-        Document gamePage = loadSteamPage(rawGameName);
-        
-        return new GameInfoDto(
+    public SteamDto getGameInformation(String rawGameName, Document gamePage) {
+        return new SteamDto(
             retrieveInformation.gameNameDisplay(gamePage),
             retrieveInformation.gameDescription(gamePage),
             retrieveInformation.gameBanner(gamePage),
@@ -61,7 +57,7 @@ public class SteamParser implements GameParser {
         cookies.put("birthtime", "978314400");
         cookies.put("lastagecheckage", "1-January-2001");
 
-        return Jsoup.connect("https://store.steampowered.com/app/" + appId + "/" + urlName + "?l=portuguese")
+        return Jsoup.connect("https://store.steampowered.com/app/" + appId + "/" + urlName + "/?l=portuguese")
                 .cookies(cookies)
                 .userAgent("Mozilla/5.0")
                 .timeout(10000)
@@ -78,7 +74,7 @@ public class SteamParser implements GameParser {
     public String showGamePromotionPrice(Document doc) {
         return retrieveInformation.safeSearch(doc, "div.discount_final_price")
                 .map(Element::text)
-                .orElse("Não há promoções");
+                .orElseGet(() -> showGamePrice(doc));
     }
 
     public Boolean isGameInPromotion(Document doc) {
