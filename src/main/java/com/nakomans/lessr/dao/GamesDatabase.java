@@ -6,7 +6,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -26,24 +25,44 @@ public class GamesDatabase {
     }
 
     public Optional<String> getGameAppId(String rawGameName) {
-        String sql = "SELECT appid FROM games WHERE name_clean LIKE ?";
+        String sql = "SELECT appid FROM games WHERE name_clean = ?";
         String gameName = rawGameName.replaceAll("[^a-zA-Z0-9 ]","").trim().toLowerCase();
-        String searchPattern = "%" + gameName + "%";
 
         try (Connection conn = connectToDatabase();
             PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 
-                pstmt.setString(1, searchPattern);
+            pstmt.setString(1, gameName);
 
-                try (ResultSet rs = pstmt.executeQuery()) {
-                    if(rs.next()) {
-                        return Optional.of(String.valueOf(rs.getInt("appid")));
-                    }
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if(rs.next()) {
+                    return Optional.of(String.valueOf(rs.getInt("appid")));
                 }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            } return Optional.empty();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         } 
+        return Optional.empty();
+    }
 
+
+    public java.util.List<String> suggestSimilarGames(String rawGameName) {
+        java.util.List<String> suggestions = new java.util.ArrayList<>();
+        String sql = "SELECT name_clean FROM games WHERE name_clean LIKE ? LIMIT 5";
+        String gameName = rawGameName.replaceAll("[^a-zA-Z0-9 ]", "").trim().toLowerCase();
+        
+        try (Connection conn = connectToDatabase();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setString(1, "%" + gameName + "%");
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    suggestions.add(rs.getString(1));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return suggestions;
+    }
 
 }
