@@ -8,9 +8,7 @@ import java.util.regex.Pattern;
 import java.util.Optional;
 import com.google.gson.*;
 import com.nakomans.lessr.dto.EnebaDto;
-import com.nakomans.lessr.dto.SteamDto;
 import com.nakomans.lessr.service.gamesinformation.RetrieveInformationFromSteam;
-
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;

@@ -56,8 +56,9 @@ public class SteamParser {
         cookies.put("wants_mature_content", "1");
         cookies.put("birthtime", "978314400");
         cookies.put("lastagecheckage", "1-January-2001");
+        cookies.put("Steam_Language", "brazilian");
 
-        return Jsoup.connect("https://store.steampowered.com/app/" + appId + "/" + urlName + "/?l=portuguese")
+        return Jsoup.connect("https://store.steampowered.com/app/" + appId + "/" + urlName + "/?l=brazilian")
                 .cookies(cookies)
                 .userAgent("Mozilla/5.0")
                 .timeout(10000)
