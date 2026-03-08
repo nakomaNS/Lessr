@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -33,21 +34,21 @@ public class RetrieveGamesInformation {
 
         org.jsoup.nodes.Document sharedSteamDoc = steamParser.loadSteamPage(gameName);
 
-        CompletableFuture<Object> enebaTask = CompletableFuture.supplyAsync(() -> {
+        CompletableFuture<Object> enebaTask = CompletableFuture.<Object>supplyAsync(() -> {
             try {
                 return enebaParser.getGameInformation(gameName, sharedSteamDoc);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+            } catch (Exception e) {
+                return null;
             }
-        });
+        }).completeOnTimeout(null, 15, TimeUnit.SECONDS);
 
-        CompletableFuture<Object> nuuvemTask = CompletableFuture.supplyAsync(() -> {
+        CompletableFuture<Object> nuuvemTask = CompletableFuture.<Object>supplyAsync(() -> {
             try {
                 return nuuvemParser.getGameInformation(gameName, sharedSteamDoc);
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                return null;
             }
-        });
+        }).completeOnTimeout(null, 5, TimeUnit.SECONDS);
 
         Object steamInfo = steamParser.getGameInformation(gameName, sharedSteamDoc);
 

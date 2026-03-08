@@ -65,20 +65,31 @@ public class SteamParser {
                 .get();
     }
 
-    public String showGamePrice(Document doc) {
-        return retrieveInformation.safeSearch(doc, "div.discount_original_price")
-                .map(Element::text)
-                .orElseGet(() -> retrieveInformation.safeSearch(doc, "div.game_purchase_price.price")
-                .map(Element::text).orElse("N/A"));
+    public String showGamePrice(Document steamPage) {
+        Element purchaseBlock = steamPage.selectFirst(".game_area_purchase_game_wrapper:not(.dynamic_bundle_description)");
+        if (purchaseBlock == null) return "Indisponível";
+
+        Element discountOriginal = purchaseBlock.selectFirst(".discount_original_price");
+        if (discountOriginal != null) return discountOriginal.text();
+
+        Element normalPrice = purchaseBlock.selectFirst(".game_purchase_price.price");
+        if (normalPrice != null) return normalPrice.text();
+
+        return "Indisponível";
     }
 
-    public String showGamePromotionPrice(Document doc) {
-        return retrieveInformation.safeSearch(doc, "div.discount_final_price")
-                .map(Element::text)
-                .orElseGet(() -> showGamePrice(doc));
+    public String showGamePromotionPrice(Document steamPage) {
+        Element purchaseBlock = steamPage.selectFirst(".game_area_purchase_game_wrapper:not(.dynamic_bundle_description)");
+        if (purchaseBlock == null) return "";
+
+        Element discountFinal = purchaseBlock.selectFirst(".discount_final_price");
+        return discountFinal != null ? discountFinal.text() : "";
     }
 
-    public Boolean isGameInPromotion(Document doc) {
-        return retrieveInformation.safeSearch(doc, "div.discount_original_price").isPresent();
+    public Boolean isGameInPromotion(Document steamPage) {
+        Element purchaseBlock = steamPage.selectFirst(".game_area_purchase_game_wrapper:not(.dynamic_bundle_description)");
+        if (purchaseBlock == null) return false;
+
+        return purchaseBlock.selectFirst(".discount_block:not(.no_discount)") != null;
     }
 }
