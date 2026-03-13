@@ -1,6 +1,6 @@
 # Lessr Bot
 
-Bot do Discord construído para comparar preços de jogos simultaneamente em múltiplas lojas (Steam, Nuuvem e Eneba) e gerenciar wishlists personalizadas para os usuários.
+API que consulta diariamente promoções de jogos em lojas confiáveis, retorna o resultado organizado, com registro de histórico das promoções, pico de valores, plug & play para bots do Discord e Telegram.
 
 ![Java](https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.4.3-6DB33F?style=for-the-badge&logo=spring&logoColor=white)
