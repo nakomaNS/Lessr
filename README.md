@@ -1,4 +1,4 @@
-# Lessr Bot
+# Lessr
 
 API que consulta diariamente promoções de jogos em lojas confiáveis, retorna o resultado organizado, com registro de histórico das promoções, pico de valores, plug & play para bots do Discord e Telegram.
 
